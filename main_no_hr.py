@@ -18,7 +18,7 @@ args = parser.parse_args()
 os.makedirs(args.output_dir, exist_ok=True)
 
 # 1. Load Data
-data_path = os.path.join(args.data_dir, f"data_{args.mode}.npz")
+data_path = os.path.join(args.data_dir, f"data_{args.mode}_no_hr.npz")
 data = np.load(data_path)
 X_imu = data['X_imu']
 y = data['y']
@@ -64,8 +64,8 @@ model.compile(
 )
 
 # 4. Train
-checkpoint_path = f"{args.output_dir}/model_{args.mode}.h5"
-csv_logger = callbacks.CSVLogger(f"{args.output_dir}/log_{args.mode}.csv")
+checkpoint_path = f"{args.output_dir}/model_{args.mode}_no_hr.h5"
+csv_logger = callbacks.CSVLogger(f"{args.output_dir}/log_{args.mode}_no_hr.csv")
 early_stop = callbacks.EarlyStopping(monitor="val_loss", patience=10, restore_best_weights=True)
 checkpoint = callbacks.ModelCheckpoint(checkpoint_path, save_best_only=True, monitor='val_accuracy')
 
@@ -101,7 +101,7 @@ try:
     )
 
     print(results)
-    with open(f"{args.output_dir}/results_{args.mode}.txt", "w") as f:
+    with open(f"{args.output_dir}/results_{args.mode}_no_hr.txt", "w") as f:
         f.write(results)
 except Exception as e:
     print(f"\nCRITICAL ERROR DURING EVALUATION: {e}\n")

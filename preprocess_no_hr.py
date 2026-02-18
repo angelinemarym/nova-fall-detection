@@ -93,7 +93,7 @@ def create_dataset(mode):
     
     print(f"Saving {mode}: IMU {X_imu.shape}, Labels {y.shape}")
     np.savez_compressed(
-        os.path.join(OUTPUT_DIR, f"data_{mode}.npz"),
+        os.path.join(OUTPUT_DIR, f"data_{mode}_no_hr.npz"),
         X_imu=X_imu, y=y
     )
     del X_imu, y, X_imu_list, y_list
