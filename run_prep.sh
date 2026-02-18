@@ -14,5 +14,5 @@
 source activate my_tf_env
 
 echo "Starting optimized preprocessing..."
-python preprocess_optimized.py
+python preprocess.py
 echo "Done."
