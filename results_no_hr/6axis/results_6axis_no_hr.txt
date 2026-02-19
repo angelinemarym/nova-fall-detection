@@ -1,5 +1,5 @@
 Mode: 6axis (NO HR)
-Accuracy:    0.8535
-Sensitivity: 0.9271
-Specificity: 0.8141
-Matrix: TP=547, TN=898, FP=205, FN=43
+Accuracy:    0.8895
+Sensitivity: 0.9085
+Specificity: 0.8794
+Matrix: TP=536, TN=970, FP=133, FN=54

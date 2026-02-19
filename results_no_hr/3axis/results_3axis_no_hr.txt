@@ -1,5 +1,5 @@
 Mode: 3axis (NO HR)
-Accuracy:    0.8580
-Sensitivity: 0.8613
-Specificity: 0.8562
-Matrix: TP=509, TN=947, FP=159, FN=82
+Accuracy:    0.8709
+Sensitivity: 0.8832
+Specificity: 0.8644
+Matrix: TP=522, TN=956, FP=150, FN=69
