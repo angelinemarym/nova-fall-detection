@@ -69,7 +69,7 @@ def parse_file_optimized(file_path, mode):
             final_data = np.hstack([final_data, gyro_vals])
 
         if mode == '9axis':
-            mag_df = df[df['sensor'] == 'mag'].dropna(subset=['x', 'y', 'z']).reset_index(drop=True)
+            mag_df = df[df['sensor'] == 'mgm'].dropna(subset=['x', 'y', 'z']).reset_index(drop=True)
             if not mag_df.empty:
                 min_len = min(min_len, len(mag_df))
                 mag_vals = mag_df.loc[:min_len-1, ['x', 'y', 'z']].values
