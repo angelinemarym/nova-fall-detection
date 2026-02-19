@@ -1,0 +1,5 @@
+Mode: 9axis
+Accuracy:    0.9363
+Sensitivity: 0.9094
+Specificity: 0.9509
+Matrix: TP=522, TN=1006, FP=52, FN=52
