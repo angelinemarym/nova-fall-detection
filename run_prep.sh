@@ -11,7 +11,7 @@
 # Load modules if needed
 # module load anaconda3/2023.03
 
-source activate my_tf_env
+source fall_detection_env/bin/activate
 
 echo "Starting optimized preprocessing..."
 python preprocess.py
