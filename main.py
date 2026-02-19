@@ -71,7 +71,7 @@ def build_fused_model(window_size, n_channels):
     # --- Branch 1: IMU Data (CNN-BiLSTM) ---
     imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")
 
-    x = layers.Conv1D(128, kernel_size=3, padding="same", activation="relu")(imu_input)
+    x = layers.Conv1D(256, kernel_size=3, padding="same", activation="relu")(imu_input)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling1D(2)(x)
 
@@ -79,8 +79,8 @@ def build_fused_model(window_size, n_channels):
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling1D(2)(x)
 
-    x = layers.Bidirectional(layers.LSTM(128, return_sequences=True))(x)
-    x = layers.Bidirectional(layers.LSTM(128, return_sequences=False))(x)
+    x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(x)
+    x = layers.Bidirectional(layers.LSTM(64, return_sequences=False))(x)
 
     # --- Branch 2: Heart Rate Data (Dense) ---
     hr_input = layers.Input(shape=(1,), name="hr_input")
@@ -90,7 +90,7 @@ def build_fused_model(window_size, n_channels):
     combined = layers.Concatenate()([x, y_branch])
 
     # --- Final Classifier ---
-    z = layers.Dense(64, activation="relu")(combined)
+    z = layers.Dense(96, activation="relu")(combined)
     z = layers.Dropout(0.4)(z)
     outputs = layers.Dense(1, activation="sigmoid")(z)
 
@@ -101,7 +101,7 @@ model = build_fused_model(window_size=X_imu_train.shape[1], n_channels=X_imu_tra
 model.summary()
 
 model.compile(
-    optimizer=optimizers.Adam(learning_rate=5e-4),
+    optimizer=optimizers.Adam(learning_rate=1e-4),
     loss="binary_crossentropy",
     metrics=["accuracy"]
 )
