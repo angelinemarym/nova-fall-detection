@@ -1,0 +1,5 @@
+Mode: 3axis (NO HR)
+Accuracy:    1.0000
+Sensitivity: 1.0000
+Specificity: 1.0000
+Matrix: TP=125, TN=329, FP=0, FN=0
