@@ -1,0 +1,28 @@
+Advanced DL Experiment Results
+============================================================
+         Case                   Model  Accuracy  Sensitivity  Specificity  TP   TN  FP  FN
+  3axis_no_HR                CNN_Only  0.858574     0.861252     0.857143 509  948 158  82
+  3axis_no_HR               LSTM_Only  0.852681     0.803723     0.878843 475  972 134 116
+  3axis_no_HR CNN_LSTM_Unidirectional  0.853860     0.873096     0.843580 516  933 173  75
+  3axis_no_HR             Transformer  0.805539     0.661591     0.882459 391  976 130 200
+3axis_with_HR                CNN_Only  0.852092     0.886633     0.833635 524  922 184  67
+3axis_with_HR               LSTM_Only  0.850913     0.827411     0.863472 489  955 151 102
+3axis_with_HR CNN_LSTM_Unidirectional  0.851503     0.802030     0.877939 474  971 135 117
+3axis_with_HR             Transformer  0.804950     0.654822     0.885172 387  979 127 204
+  6axis_no_HR                CNN_Only  0.892499     0.901695     0.887579 532  979 124  58
+  6axis_no_HR               LSTM_Only  0.852924     0.844068     0.857661 498  946 157  92
+  6axis_no_HR CNN_LSTM_Unidirectional  0.888364     0.896610     0.883953 529  975 128  61
+  6axis_no_HR             Transformer  0.821028     0.798305     0.833182 471  919 184 119
+6axis_with_HR                CNN_Only  0.883048     0.915254     0.865820 540  955 148  50
+6axis_with_HR               LSTM_Only  0.867100     0.877966     0.861287 518  950 153  72
+6axis_with_HR CNN_LSTM_Unidirectional  0.886001     0.945763     0.854034 558  942 161  32
+6axis_with_HR             Transformer  0.849970     0.757627     0.899365 447  992 111 143
+  9axis_no_HR                CNN_Only  0.940564     0.935540     0.943289 537  998  60  37
+  9axis_no_HR               LSTM_Only  0.898284     0.914634     0.889414 525  941 117  49
+  9axis_no_HR CNN_LSTM_Unidirectional  0.940564     0.926829     0.948015 532 1003  55  42
+  9axis_no_HR             Transformer  0.879289     0.883275     0.877127 507  928 130  67
+9axis_with_HR                CNN_Only  0.937500     0.935540     0.938563 537  993  65  37
+9axis_with_HR               LSTM_Only  0.903799     0.925087     0.892250 531  944 114  43
+9axis_with_HR CNN_LSTM_Unidirectional  0.950980     0.939024     0.957467 539 1013  45  35
+9axis_with_HR             Transformer  0.875000     0.883275     0.870510 507  921 137  67
+============================================================
