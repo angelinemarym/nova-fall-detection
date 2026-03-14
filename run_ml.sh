@@ -4,9 +4,9 @@
 #SBATCH --error=ml_exp.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=16G
-#SBATCH --time=01:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=10:00:00
 
 # 1. Activate your virtual environment
 # Ensure you have installed dependencies on the LOGIN NODE first:
@@ -25,9 +25,12 @@ if [ ! -f "ml_experiments.py" ]; then
     exit 1
 fi
 
-# Run the experiment script (using python3 from the activated env)
-echo "Running experiment script..."
+# Run the experiment scripts
+echo "Running Traditional ML experiments..."
 python3 -u ml_experiments.py
+
+echo "Running Advanced Deep Learning experiments..."
+python3 -u dl_experiments.py
 
 echo "========================================="
 echo "Experiments Completed Successfully."
