@@ -1,0 +1,34 @@
+Traditional ML Experiment Results Summary
+==================================================
+         Case        Model  Accuracy  Sensitivity  Specificity  TP   TN  FP  FN
+  3axis_no_HR          kNN  0.857985     0.749577     0.915913 443 1013  93 148
+  3axis_no_HR RandomForest  0.885091     0.798646     0.931284 472 1030  76 119
+  3axis_no_HR   NaiveBayes  0.601061     0.972927     0.402351 575  445 661  16
+  3axis_no_HR          ANN  0.846199     0.758037     0.893309 448  988 118 143
+  3axis_no_HR      XGBoost  0.880966     0.812183     0.917722 480 1015  91 111
+3axis_with_HR          kNN  0.879788     0.768190     0.939421 454 1039  67 137
+3axis_with_HR RandomForest  0.898055     0.822335     0.938517 486 1038  68 105
+3axis_with_HR   NaiveBayes  0.601650     0.972927     0.403255 575  446 660  16
+3axis_with_HR          ANN  0.846199     0.835871     0.851718 494  942 164  97
+3axis_with_HR      XGBoost  0.921037     0.849408     0.959313 502 1061  45  89
+  6axis_no_HR          kNN  0.864146     0.754237     0.922937 445 1018  85 145
+  6axis_no_HR RandomForest  0.894271     0.803390     0.942883 474 1040  63 116
+  6axis_no_HR   NaiveBayes  0.623154     0.957627     0.444243 565  490 613  25
+  6axis_no_HR          ANN  0.850561     0.828814     0.862194 489  951 152 101
+  6axis_no_HR      XGBoost  0.900177     0.833898     0.935630 492 1032  71  98
+6axis_with_HR          kNN  0.878323     0.786441     0.927471 464 1023  80 126
+6axis_with_HR RandomForest  0.902540     0.805085     0.954669 475 1053  50 115
+6axis_with_HR   NaiveBayes  0.621973     0.959322     0.441523 566  487 616  24
+6axis_with_HR          ANN  0.871825     0.849153     0.883953 501  975 128  89
+6axis_with_HR      XGBoost  0.923213     0.866102     0.953762 511 1052  51  79
+  9axis_no_HR          kNN  0.931373     0.905923     0.945180 520 1000  58  54
+  9axis_no_HR RandomForest  0.934436     0.891986     0.957467 512 1013  45  62
+  9axis_no_HR   NaiveBayes  0.623775     0.935540     0.454631 537  481 577  37
+  9axis_no_HR          ANN  0.931373     0.912892     0.941399 524  996  62  50
+  9axis_no_HR      XGBoost  0.947917     0.925087     0.960302 531 1016  42  43
+9axis_with_HR          kNN  0.934436     0.911150     0.947070 523 1002  56  51
+9axis_with_HR RandomForest  0.941176     0.904181     0.961248 519 1017  41  55
+9axis_with_HR   NaiveBayes  0.624387     0.935540     0.455577 537  482 576  37
+9axis_with_HR          ANN  0.928922     0.891986     0.948960 512 1004  54  62
+9axis_with_HR      XGBoost  0.958946     0.949477     0.964083 545 1020  38  29
+==================================================

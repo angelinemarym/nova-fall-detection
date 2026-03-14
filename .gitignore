@@ -4,3 +4,4 @@ processed_tensors
 processed_tensors_no_hr
 UMAFall_Dataset
 KFall_Dataset
+*.pkl
