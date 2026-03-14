@@ -1,0 +1,5 @@
+Mode: 9axis (NO HR)
+Accuracy:    0.9954
+Sensitivity: 1.0000
+Specificity: 0.9935
+Matrix: TP=125, TN=308, FP=2, FN=0
