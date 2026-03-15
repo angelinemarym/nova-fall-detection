@@ -6,6 +6,8 @@ from tensorflow.keras import layers, models, optimizers, callbacks
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, confusion_matrix
+import time
+from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2_as_graph
 
 print(f"Python Version: {sys.version}", flush=True)
 print("Starting dl_experiments.py script...", flush=True)
@@ -129,6 +131,76 @@ def build_transformer_model(window_size, n_channels, use_hr):
     outputs = layers.Dense(1, activation="sigmoid")(z)
     return models.Model(inputs=inputs, outputs=outputs, name="Transformer")
 
+def build_cnn_bilstm_model(window_size, n_channels, use_hr):
+    imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")
+    x = layers.Conv1D(256, kernel_size=3, padding="same", activation="relu")(imu_input)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling1D(2)(x)
+    x = layers.Conv1D(256, kernel_size=3, padding="same", activation="relu")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling1D(2)(x)
+    # BiLSTM
+    x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(x)
+    x = layers.Bidirectional(layers.LSTM(64, return_sequences=False))(x)
+
+    if use_hr:
+        hr_input = layers.Input(shape=(1,), name="hr_input")
+        hr_branch = layers.Dense(16, activation="relu")(hr_input)
+        combined = layers.Concatenate()([x, hr_branch])
+        inputs = [imu_input, hr_input]
+    else:
+        combined = x
+        inputs = [imu_input]
+
+    z = layers.Dense(96, activation="relu")(combined)
+    z = layers.Dropout(0.4)(z)
+    outputs = layers.Dense(1, activation="sigmoid")(z)
+    return models.Model(inputs=inputs, outputs=outputs, name="CNN_BiLSTM")
+
+# ==========================================
+# 3. Performance Profiling
+# ==========================================
+
+def get_flops(model):
+    concrete_func = tf.function(lambda x: model(x))
+    
+    # Handle multiple inputs if necessary
+    if isinstance(model.input_shape, list):
+        input_shapes = [tf.TensorSpec([1] + list(s[1:]), tf.float32) for s in model.input_shape]
+        concrete_func = concrete_func.get_concrete_function(input_shapes)
+    else:
+        concrete_func = concrete_func.get_concrete_function(
+            tf.TensorSpec([1] + list(model.input_shape[1:]), tf.float32)
+        )
+
+    frozen_func, graph_def = convert_variables_to_constants_v2_as_graph(concrete_func)
+
+    with tf.Graph().as_default() as graph:
+        tf.import_graph_def(graph_def, name='')
+        run_meta = tf.compat.v1.RunMetadata()
+        opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
+        flops = tf.compat.v1.profiler.profile(graph=graph, run_meta=run_meta, cmd='op', options=opts)
+        return flops.total_float_ops if flops is not None else 0
+
+def measure_latency(model, window_size, n_channels, use_hr, n_iterations=100):
+    # Dummy input
+    imu_dummy = np.random.randn(1, window_size, n_channels).astype(np.float32)
+    hr_dummy = np.random.randn(1, 1).astype(np.float32)
+    
+    inputs = [imu_dummy, hr_dummy] if use_hr else [imu_dummy]
+    
+    # Warmup
+    for _ in range(10):
+        _ = model.predict(inputs, verbose=0)
+    
+    start_time = time.time()
+    for _ in range(n_iterations):
+        _ = model.predict(inputs, verbose=0)
+    end_time = time.time()
+    
+    avg_latency_ms = ((end_time - start_time) / n_iterations) * 1000
+    return avg_latency_ms
+
 # ==========================================
 # 3. Experiment Loop
 # ==========================================
@@ -137,7 +209,8 @@ MODEL_BUILDERS = {
     'CNN_Only': build_cnn_only_model,
     'LSTM_Only': build_lstm_only_model,
     'CNN_LSTM_Unidirectional': build_unidirectional_cnn_lstm_model,
-    'Transformer': build_transformer_model
+    'Transformer': build_transformer_model,
+    'CNN_BiLSTM': build_cnn_bilstm_model
 }
 
 def run_experiments():
@@ -231,7 +304,11 @@ def run_experiments():
                     'Accuracy': acc,
                     'Sensitivity': sens,
                     'Specificity': spec,
-                    'TP': tp, 'TN': tn, 'FP': fp, 'FN': fn
+                    'TP': tp, 'TN': tn, 'FP': fp, 'FN': fn,
+                    'Params': model.count_params(),
+                    'Size_KB': (model.count_params() * 4) / 1024,
+                    'FLOPs': get_flops(model),
+                    'Latency_ms': measure_latency(model, T, F, use_hr)
                 })
                 
                 # Save small model if needed (skipping for now to save HPC space)

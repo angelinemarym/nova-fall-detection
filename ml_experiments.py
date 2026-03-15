@@ -11,6 +11,7 @@ from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 import joblib
 import sys
+import time
 
 print(f"Python Version: {sys.version}", flush=True)
 print("Starting ml_experiments.py script...", flush=True)
@@ -55,6 +56,44 @@ def extract_features(X_imu):
     # Concatenate all features
     X_feats = np.hstack([f_mean, f_std, f_min, f_max, f_median])
     return X_feats
+
+# ==========================================
+# 3. Performance Profiling
+# ==========================================
+
+def get_model_size_kb(model_name, model, X_train, y_train):
+    """
+    Estimates model size in KB.
+    """
+    if model_name == 'kNN':
+        # kNN stores the entire training set
+        size_bytes = X_train.nbytes + y_train.nbytes
+    else:
+        # Save to a temporary file and check size
+        temp_path = 'temp_model.pkl'
+        joblib.dump(model, temp_path)
+        size_bytes = os.path.getsize(temp_path)
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            
+    return size_bytes / 1024
+
+def measure_ml_latency(model, X_sample, n_iterations=1000):
+    """
+    Measures average inference latency in ms.
+    """
+    # X_sample should be a single row (1, n_features)
+    # Warmup
+    for _ in range(10):
+        _ = model.predict(X_sample)
+        
+    start_time = time.time()
+    for _ in range(n_iterations):
+        _ = model.predict(X_sample)
+    end_time = time.time()
+    
+    avg_latency_ms = ((end_time - start_time) / n_iterations) * 1000
+    return avg_latency_ms
 
 # ==========================================
 # 3. Main Experiment Loop
@@ -131,7 +170,9 @@ def run_experiments():
                     'Accuracy': acc,
                     'Sensitivity': sensitivity,
                     'Specificity': specificity,
-                    'TP': tp, 'TN': tn, 'FP': fp, 'FN': fn
+                    'TP': tp, 'TN': tn, 'FP': fp, 'FN': fn,
+                    'Size_KB': get_model_size_kb(model_name, model, X_train, y_train),
+                    'Latency_ms': measure_ml_latency(model, X_test[0:1])
                 }
                 summary_results.append(res)
                 
