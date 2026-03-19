@@ -7,6 +7,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import keras_tuner as kt
 
+import random
+def set_random_seed(seed=42):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
+set_random_seed()
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', type=str, default='9axis', help='Which dataset to tune on')
 parser.add_argument('--data_dir', type=str, default='./processed_tensors')

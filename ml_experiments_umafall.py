@@ -13,6 +13,13 @@ import joblib
 import sys
 import time
 
+import random
+def set_random_seed(seed=42):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+set_random_seed()
+
 print(f"Python Version: {sys.version}", flush=True)
 print("Starting ml_experiments_umafall.py script...", flush=True)
 

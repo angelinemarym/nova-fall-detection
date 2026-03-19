@@ -26,6 +26,25 @@ def build_cnn_only_model(window_size, n_channels, use_hr=False):
 
 def build_lstm_only_model(window_size, n_channels, use_hr=False):
     imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")
+    x = layers.LSTM(64, return_sequences=True)(imu_input)
+    x = layers.LSTM(64, return_sequences=False)(x)
+
+    if use_hr:
+        hr_input = layers.Input(shape=(1,), name="hr_input")
+        hr_branch = layers.Dense(16, activation="relu")(hr_input)
+        combined = layers.Concatenate()([x, hr_branch])
+        inputs = [imu_input, hr_input]
+    else:
+        combined = x
+        inputs = imu_input
+
+    z = layers.Dense(96, activation="relu")(combined)
+    z = layers.Dropout(0.4)(z)
+    outputs = layers.Dense(1, activation="sigmoid")(z)
+    return models.Model(inputs=inputs, outputs=outputs, name="LSTM_Only")
+
+def build_bilstm_only_model(window_size, n_channels, use_hr=False):
+    imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")
     x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(imu_input)
     x = layers.Bidirectional(layers.LSTM(64, return_sequences=False))(x)
 
@@ -41,7 +60,7 @@ def build_lstm_only_model(window_size, n_channels, use_hr=False):
     z = layers.Dense(96, activation="relu")(combined)
     z = layers.Dropout(0.4)(z)
     outputs = layers.Dense(1, activation="sigmoid")(z)
-    return models.Model(inputs=inputs, outputs=outputs, name="LSTM_Only")
+    return models.Model(inputs=inputs, outputs=outputs, name="BiLSTM_Only")
 
 def build_unidirectional_cnn_lstm_model(window_size, n_channels, use_hr=False):
     imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")

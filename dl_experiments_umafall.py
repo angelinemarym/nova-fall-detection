@@ -10,6 +10,14 @@ import time
 import argparse
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2_as_graph
 
+import random
+def set_random_seed(seed=42):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
+set_random_seed()
+
 print(f"Python Version: {sys.version}", flush=True)
 print("Starting dl_experiments_umafall.py script...", flush=True)
 
@@ -37,6 +45,7 @@ BATCH_SIZE = 64
 from dl_models import (
     build_cnn_only_model,
     build_lstm_only_model,
+    build_bilstm_only_model,
     build_unidirectional_cnn_lstm_model,
     build_transformer_model,
     build_cnn_bilstm_model,
@@ -88,7 +97,8 @@ def measure_latency(model, window_size, n_channels, n_iterations=100):
 MODEL_BUILDERS = {
     'CNN_Only': build_cnn_only_model,
     'LSTM_Only': build_lstm_only_model,
-    'CNN_LSTM_Unidirectional': build_unidirectional_cnn_lstm_model,
+    'BiLSTM_Only': build_bilstm_only_model,
+    'CNN_LSTM': build_unidirectional_cnn_lstm_model,
     'Transformer': build_transformer_model,
     'CNN_BiLSTM': build_cnn_bilstm_model,
     'CNN_GRU': build_cnn_gru_model,
