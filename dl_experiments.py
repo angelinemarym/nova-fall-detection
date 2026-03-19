@@ -6,11 +6,18 @@ from tensorflow.keras import layers, models, optimizers, callbacks
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, confusion_matrix
+import argparse
 import time
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2_as_graph
 
 print(f"Python Version: {sys.version}", flush=True)
 print("Starting dl_experiments.py script...", flush=True)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--model', type=str, default=None, help='Specific model to run (e.g., GRU_Only, BiGRU_Only)')
+parser.add_argument('--data_dir', type=str, default='./processed_tensors')
+parser.add_argument('--output_dir', type=str, default='./results_dl')
+args_cmd = parser.parse_args()
 
 # ==========================================
 # 1. Configuration
@@ -28,134 +35,19 @@ BATCH_SIZE = 64
 # 2. Model Builders
 # ==========================================
 
-def build_cnn_only_model(window_size, n_channels, use_hr):
-    imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")
-    x = layers.Conv1D(256, kernel_size=3, padding="same", activation="relu")(imu_input)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling1D(2)(x)
-    x = layers.Conv1D(256, kernel_size=3, padding="same", activation="relu")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.GlobalAveragePooling1D()(x) # Replace LSTM with Global Pool
-
-    if use_hr:
-        hr_input = layers.Input(shape=(1,), name="hr_input")
-        hr_branch = layers.Dense(16, activation="relu")(hr_input)
-        combined = layers.Concatenate()([x, hr_branch])
-        inputs = [imu_input, hr_input]
-    else:
-        combined = x
-        inputs = [imu_input]
-
-    z = layers.Dense(96, activation="relu")(combined)
-    z = layers.Dropout(0.4)(z)
-    outputs = layers.Dense(1, activation="sigmoid")(z)
-    return models.Model(inputs=inputs, outputs=outputs, name="CNN_Only")
-
-def build_lstm_only_model(window_size, n_channels, use_hr):
-    imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")
-    # No CNN layers
-    x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(imu_input)
-    x = layers.Bidirectional(layers.LSTM(64, return_sequences=False))(x)
-
-    if use_hr:
-        hr_input = layers.Input(shape=(1,), name="hr_input")
-        hr_branch = layers.Dense(16, activation="relu")(hr_input)
-        combined = layers.Concatenate()([x, hr_branch])
-        inputs = [imu_input, hr_input]
-    else:
-        combined = x
-        inputs = [imu_input]
-
-    z = layers.Dense(96, activation="relu")(combined)
-    z = layers.Dropout(0.4)(z)
-    outputs = layers.Dense(1, activation="sigmoid")(z)
-    return models.Model(inputs=inputs, outputs=outputs, name="LSTM_Only")
-
-def build_unidirectional_cnn_lstm_model(window_size, n_channels, use_hr):
-    imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")
-    x = layers.Conv1D(256, kernel_size=3, padding="same", activation="relu")(imu_input)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling1D(2)(x)
-    x = layers.Conv1D(256, kernel_size=3, padding="same", activation="relu")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling1D(2)(x)
-    # Unidirectional LSTM instead of BiLSTM
-    x = layers.LSTM(64, return_sequences=True)(x)
-    x = layers.LSTM(64, return_sequences=False)(x)
-
-    if use_hr:
-        hr_input = layers.Input(shape=(1,), name="hr_input")
-        hr_branch = layers.Dense(16, activation="relu")(hr_input)
-        combined = layers.Concatenate()([x, hr_branch])
-        inputs = [imu_input, hr_input]
-    else:
-        combined = x
-        inputs = [imu_input]
-
-    z = layers.Dense(96, activation="relu")(combined)
-    z = layers.Dropout(0.4)(z)
-    outputs = layers.Dense(1, activation="sigmoid")(z)
-    return models.Model(inputs=inputs, outputs=outputs, name="CNN_LSTM_Unidirectional")
-
-def build_transformer_model(window_size, n_channels, use_hr):
-    def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
-        # Normalization and Attention
-        x = layers.LayerNormalization(epsilon=1e-6)(inputs)
-        x = layers.MultiHeadAttention(key_dim=head_size, num_heads=num_heads, dropout=dropout)(x, x)
-        x = layers.Dropout(dropout)(x)
-        res = x + inputs
-
-        # Feed Forward Part
-        x = layers.LayerNormalization(epsilon=1e-6)(res)
-        x = layers.Conv1D(filters=ff_dim, kernel_size=1, activation="relu")(x)
-        x = layers.Dropout(dropout)(x)
-        x = layers.Conv1D(filters=inputs.shape[-1], kernel_size=1)(x)
-        return x + res
-
-    imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")
-    # Lightweight Transformer block
-    x = transformer_encoder(imu_input, head_size=64, num_heads=4, ff_dim=128, dropout=0.1)
-    x = layers.GlobalAveragePooling1D()(x)
-
-    if use_hr:
-        hr_input = layers.Input(shape=(1,), name="hr_input")
-        hr_branch = layers.Dense(16, activation="relu")(hr_input)
-        combined = layers.Concatenate()([x, hr_branch])
-        inputs = [imu_input, hr_input]
-    else:
-        combined = x
-        inputs = [imu_input]
-
-    z = layers.Dense(96, activation="relu")(combined)
-    z = layers.Dropout(0.4)(z)
-    outputs = layers.Dense(1, activation="sigmoid")(z)
-    return models.Model(inputs=inputs, outputs=outputs, name="Transformer")
-
-def build_cnn_bilstm_model(window_size, n_channels, use_hr):
-    imu_input = layers.Input(shape=(window_size, n_channels), name="imu_input")
-    x = layers.Conv1D(256, kernel_size=3, padding="same", activation="relu")(imu_input)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling1D(2)(x)
-    x = layers.Conv1D(256, kernel_size=3, padding="same", activation="relu")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling1D(2)(x)
-    # BiLSTM
-    x = layers.Bidirectional(layers.LSTM(64, return_sequences=True))(x)
-    x = layers.Bidirectional(layers.LSTM(64, return_sequences=False))(x)
-
-    if use_hr:
-        hr_input = layers.Input(shape=(1,), name="hr_input")
-        hr_branch = layers.Dense(16, activation="relu")(hr_input)
-        combined = layers.Concatenate()([x, hr_branch])
-        inputs = [imu_input, hr_input]
-    else:
-        combined = x
-        inputs = [imu_input]
-
-    z = layers.Dense(96, activation="relu")(combined)
-    z = layers.Dropout(0.4)(z)
-    outputs = layers.Dense(1, activation="sigmoid")(z)
-    return models.Model(inputs=inputs, outputs=outputs, name="CNN_BiLSTM")
+from dl_models import (
+    build_cnn_only_model,
+    build_lstm_only_model,
+    build_unidirectional_cnn_lstm_model,
+    build_transformer_model,
+    build_cnn_bilstm_model,
+    build_cnn_gru_model,
+    build_cnn_bigru_model,
+    build_gru_only_model,
+    build_bigru_only_model,
+    build_tcn_model,
+    build_multiscale_se_bilstm_model
+)
 
 # ==========================================
 # 3. Performance Profiling
@@ -202,7 +94,7 @@ def measure_latency(model, window_size, n_channels, use_hr, n_iterations=100):
     return avg_latency_ms
 
 # ==========================================
-# 3. Experiment Loop
+# 4. Experiment Loop
 # ==========================================
 
 MODEL_BUILDERS = {
@@ -210,8 +102,21 @@ MODEL_BUILDERS = {
     'LSTM_Only': build_lstm_only_model,
     'CNN_LSTM_Unidirectional': build_unidirectional_cnn_lstm_model,
     'Transformer': build_transformer_model,
-    'CNN_BiLSTM': build_cnn_bilstm_model
+    'CNN_BiLSTM': build_cnn_bilstm_model,
+    'CNN_GRU': build_cnn_gru_model,
+    'CNN_BiGRU': build_cnn_bigru_model,
+    'GRU_Only': build_gru_only_model,
+    'BiGRU_Only': build_bigru_only_model,
+    'TCN': build_tcn_model,
+    'MultiScale_SE_BiLSTM': build_multiscale_se_bilstm_model,
 }
+
+if args_cmd.model:
+    if args_cmd.model in MODEL_BUILDERS:
+        MODEL_BUILDERS = {args_cmd.model: MODEL_BUILDERS[args_cmd.model]}
+    else:
+        print(f"Model {args_cmd.model} not found in MODEL_BUILDERS. Available models: {list(MODEL_BUILDERS.keys())}")
+        sys.exit(1)
 
 def run_experiments():
     results_summary = []
