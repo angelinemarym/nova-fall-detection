@@ -24,54 +24,36 @@ def parse_hifd_file(file_path):
             print(f"File not found: {file_path}")
             return None, None, None
             
-        data = scipy.io.loadmat(file_path)
-        data_keys = [k for k in data.keys() if not k.startswith('__')]
-        if not data_keys:
-            print(f"No data keys found in {file_path}. Keys: {list(data.keys())}")
+        mat_data = scipy.io.loadmat(file_path)
+        
+        # Accelerometer (mandatory)
+        if 'ax' in mat_data and 'ay' in mat_data and 'az' in mat_data:
+            acc = np.stack([
+                mat_data['ax'].flatten(),
+                mat_data['ay'].flatten(),
+                mat_data['az'].flatten()
+            ], axis=1)
+        else:
+            print(f"ERROR: Missing accelerometer keys in {file_path}")
             return None, None, None
             
-        data_key = data_keys[0]
-        matrix = data[data_key]
-        
-        if len(matrix.shape) == 2:
-            # Case A: 11-12 columns as per README (Acc, Quat, Gyro, HR)
-            if matrix.shape[1] >= 11:
-                acc = matrix[:, 0:3]
-                gyro = matrix[:, 7:10] 
-                heart = matrix[:, 10] 
-                return acc, gyro, heart
-                
-            # Case B: 6 columns (Likely Acc + Gyro, no HR or Quat)
-            elif matrix.shape[1] == 6:
-                acc = matrix[:, 0:3]
-                gyro = matrix[:, 3:6]
-                return acc, gyro, None
-                
-            # Case C: 3 columns (Just Acc)
-            elif matrix.shape[1] == 3:
-                acc = matrix[:, 0:3]
-                return acc, None, None
-
-        # Case D: Separate keys (ax, ay, az, droll, dpitch, dyaw, heart, etc.)
-        if all(k in data for k in ['ax', 'ay', 'az']):
-            acc = np.hstack([data['ax'].reshape(-1, 1), data['ay'].reshape(-1, 1), data['az'].reshape(-1, 1)])
+        # Gyroscope
+        if 'droll' in mat_data and 'dpitch' in mat_data and 'dyaw' in mat_data:
+            gyro = np.stack([
+                mat_data['droll'].flatten(),
+                mat_data['dpitch'].flatten(),
+                mat_data['dyaw'].flatten()
+            ], axis=1)
+        else:
             gyro = None
-            if all(k in data for k in ['droll', 'dpitch', 'dyaw']):
-                 gyro = np.hstack([data['droll'].reshape(-1, 1), data['dpitch'].reshape(-1, 1), data['dyaw'].reshape(-1, 1)])
             
-            heart = data.get('heart')
-            if heart is not None:
-                heart = heart.flatten()
+        # Heart Rate
+        if 'heart' in mat_data:
+            heart = mat_data['heart'].flatten()
+        else:
+            heart = None
             
-            return acc, gyro, heart
-
-        print(f"DEBUG: File {file_path} - Found '{data_key}' with shape {matrix.shape}. Keys: {data_keys}")
-        for k in data_keys:
-            if hasattr(data[k], 'shape'):
-                print(f"  - Key '{k}' shape: {data[k].shape}")
-        print(f"ERROR: Unsupported structure in {file_path} (Shape {matrix.shape})")
-        return None, None, None
-
+        return acc, gyro, heart
 
     except Exception as e:
         print(f"Error parsing {file_path}: {e}")

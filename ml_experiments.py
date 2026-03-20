@@ -14,7 +14,7 @@ import sys
 import time
 
 import random
-def set_random_seed(seed=42):
+def set_random_seed(seed=0):
     os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
     np.random.seed(seed)

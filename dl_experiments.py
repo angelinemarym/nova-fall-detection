@@ -11,7 +11,7 @@ import time
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2_as_graph
 
 import random
-def set_random_seed(seed=42):
+def set_random_seed(seed=0):
     os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
