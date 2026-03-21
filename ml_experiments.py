@@ -14,11 +14,18 @@ import sys
 import time
 
 import random
+import argparse
 def set_random_seed(seed=0):
     os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
-set_random_seed()
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+args_cmd = parser.parse_args()
+SEED = args_cmd.seed
+set_random_seed(SEED)
+print(f"[ML] Using random seed: {SEED}", flush=True)
 
 print(f"Python Version: {sys.version}", flush=True)
 print("Starting ml_experiments.py script...", flush=True)
@@ -27,7 +34,7 @@ print("Starting ml_experiments.py script...", flush=True)
 # 1. Configuration
 # ==========================================
 DATA_DIR = './processed_tensors'
-OUTPUT_DIR = './results_ml'
+OUTPUT_DIR = f'./results_ml/seed_{SEED}'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 MODES = ['3axis', '6axis', '9axis']
@@ -35,10 +42,10 @@ USE_HR_OPTIONS = [False, True]
 
 MODELS = {
     'kNN': KNeighborsClassifier(n_neighbors=5),
-    'RandomForest': RandomForestClassifier(n_estimators=100, random_state=42),
+    'RandomForest': RandomForestClassifier(n_estimators=100, random_state=SEED),
     'NaiveBayes': GaussianNB(),
-    'ANN': MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=500, random_state=42),
-    'XGBoost': XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
+    'ANN': MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=500, random_state=SEED),
+    'XGBoost': XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=SEED)
 }
 
 # ==========================================
@@ -139,7 +146,7 @@ def run_experiments():
             
             # Split Data
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
+                X, y, test_size=0.2, random_state=SEED, stratify=y
             )
             
             # Scaling

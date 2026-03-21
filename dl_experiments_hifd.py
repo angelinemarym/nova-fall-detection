@@ -17,13 +17,19 @@ def set_random_seed(seed=0):
     random.seed(seed)
     np.random.seed(seed)
     tf.random.set_seed(seed)
-set_random_seed()
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+args_cmd = parser.parse_args()
+SEED = args_cmd.seed
+set_random_seed(SEED)
+print(f"[HIFD DL] Using random seed: {SEED}", flush=True)
 
 # ==========================================
 # 1. Configuration
 # ==========================================
 DATA_DIR = './processed_tensors_hifd'
-OUTPUT_DIR = './results_dl_hifd'
+OUTPUT_DIR = f'./results_dl_hifd/seed_{SEED}'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 MODES = ['3axis', '6axis']
@@ -45,9 +51,9 @@ from dl_models import (
     build_cnn_gru_model,
     build_cnn_bigru_model,
     build_gru_only_model,
-    build_bigru_only_model,
-    build_tcn_model,
-    build_multiscale_se_bilstm_model
+    build_bigru_only_model
+    # build_tcn_model,
+    # build_multiscale_se_bilstm_model
 )
 
 MODEL_BUILDERS = {
@@ -60,9 +66,9 @@ MODEL_BUILDERS = {
     'CNN_GRU': build_cnn_gru_model,
     'CNN_BiGRU': build_cnn_bigru_model,
     'GRU_Only': build_gru_only_model,
-    'BiGRU_Only': build_bigru_only_model,
-    'TCN': build_tcn_model,
-    'MultiScale_SE_BiLSTM': build_multiscale_se_bilstm_model,
+    'BiGRU_Only': build_bigru_only_model
+    # 'TCN': build_tcn_model,
+    # 'MultiScale_SE_BiLSTM': build_multiscale_se_bilstm_model,
 }
 
 # ==========================================
@@ -138,7 +144,7 @@ def run_experiments():
         
         indices = np.arange(len(y))
         X_imu_train, X_imu_test, y_train, y_test, idx_train, idx_test = train_test_split(
-            X_imu, y, indices, test_size=0.2, random_state=42, stratify=y
+            X_imu, y, indices, test_size=0.2, random_state=SEED, stratify=y
         )
         X_hr_train = X_hr[idx_train]
         X_hr_test = X_hr[idx_test]

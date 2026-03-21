@@ -14,17 +14,24 @@ import sys
 import time
 
 import random
+import argparse
 def set_random_seed(seed=0):
     os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
-set_random_seed()
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+args_cmd = parser.parse_args()
+SEED = args_cmd.seed
+set_random_seed(SEED)
+print(f"[HIFD ML] Using random seed: {SEED}", flush=True)
 
 # ==========================================
 # 1. Configuration
 # ==========================================
 DATA_DIR = './processed_tensors_hifd'
-OUTPUT_DIR = './results_ml_hifd'
+OUTPUT_DIR = f'./results_ml_hifd/seed_{SEED}'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 MODES = ['3axis', '6axis']
@@ -32,10 +39,10 @@ USE_HR_OPTIONS = [False, True]
 
 MODELS = {
     'kNN': KNeighborsClassifier(n_neighbors=5),
-    'RandomForest': RandomForestClassifier(n_estimators=100, random_state=42),
+    'RandomForest': RandomForestClassifier(n_estimators=100, random_state=SEED),
     'NaiveBayes': GaussianNB(),
-    'ANN': MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=500, random_state=42),
-    'XGBoost': XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
+    'ANN': MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=500, random_state=SEED),
+    'XGBoost': XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=SEED)
 }
 
 # ==========================================
@@ -114,7 +121,7 @@ def run_experiments():
                 X = X_imu_feats
             
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
+                X, y, test_size=0.2, random_state=SEED, stratify=y
             )
             
             # --- Handle Class Imbalance via Random Undersampling ---
@@ -122,7 +129,7 @@ def run_experiments():
             non_fall_indices = np.where(y_train == 0)[0]
             
             if len(fall_indices) > 0 and len(non_fall_indices) > len(fall_indices):
-                np.random.seed(42)
+                np.random.seed(SEED)
                 undersampled_non_fall_indices = np.random.choice(non_fall_indices, size=len(fall_indices), replace=False)
                 balanced_indices = np.concatenate([fall_indices, undersampled_non_fall_indices])
                 np.random.shuffle(balanced_indices)
